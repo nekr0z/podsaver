@@ -28,17 +28,17 @@ func TestScanDir(t *testing.T) {
 			},
 		},
 		{
-			[]string{"1.mp3", "2.mp3", "3.mp3", "5.mp3", "7.mp3"},
+			[]string{"1.mp3", "2.mp3", "3.mp3", "5.mp3", "episode.7.mp3"},
 			[]ep{
 				{1, "1.mp3"},
 				{2, "2.mp3"},
 				{3, "3.mp3"},
 				{5, "5.mp3"},
-				{7, "7.mp3"},
+				{7, "episode.7.mp3"},
 			},
 		},
 		{
-			[]string{"01.mp3", "02.mp3", "25.mp3", "drop.txt", "26.mp3"},
+			[]string{"01.mp3", "02.mp3", "25.mp3", "drop.txt", "26.mp3", "extras.mp3"},
 			[]ep{
 				{1, "01.mp3"},
 				{2, "02.mp3"},

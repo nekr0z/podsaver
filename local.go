@@ -2,8 +2,10 @@ package main
 
 import (
 	"github.com/spf13/afero"
+	"path"
 	"regexp"
 	"strconv"
+	"strings"
 )
 
 func (pod *podcast) scanDir() error {
@@ -17,7 +19,7 @@ func (pod *podcast) scanDir() error {
 	numRe := regexp.MustCompile(`\d+`)
 
 	for _, file := range files {
-		num, err := strconv.Atoi(numRe.FindString(file.Name()))
+		num, err := strconv.Atoi(numRe.FindString(strings.TrimSuffix(file.Name(), path.Ext(file.Name()))))
 		if err != nil {
 			continue
 		}
