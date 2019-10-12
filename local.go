@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/spf13/afero"
 	"path"
 	"regexp"
@@ -9,6 +10,10 @@ import (
 )
 
 func (pod *podcast) scanDir() error {
+	if pod.local == nil {
+		return fmt.Errorf("no local location specified")
+	}
+
 	files, err := afero.ReadDir(pod.local, "/")
 	if err != nil {
 		return err

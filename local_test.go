@@ -49,13 +49,7 @@ func TestScanDir(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		vfs := afero.NewMemMapFs()
-
-		if err := vfs.MkdirAll("/foo/bar", 0755); err != nil {
-			t.Fatal(err)
-		}
-
-		fs := afero.NewBasePathFs(vfs, "/foo/bar")
+		fs := afero.NewMemMapFs()
 
 		for _, epi := range testCase.files {
 			if err := afero.WriteFile(fs, epi, nil, 0644); err != nil {
@@ -88,5 +82,21 @@ func TestScanDir(t *testing.T) {
 		if !reflect.DeepEqual(eps, testCase.epis) {
 			t.Errorf("want %v, got %v", testCase.epis, eps)
 		}
+	}
+}
+
+func TestScanDirError(t *testing.T) {
+	pod := podcast{}
+
+	if err := pod.scanDir(); err == nil {
+		t.Error("scanned nothing")
+	}
+
+	fs := afero.NewBasePathFs(afero.NewMemMapFs(), "/bar/")
+
+	pod.local = fs
+
+	if err := pod.scanDir(); err == nil {
+		t.Error("scanned unreadable directory")
 	}
 }
