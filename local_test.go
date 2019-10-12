@@ -7,12 +7,12 @@ import (
 	"testing"
 )
 
-func TestScanDir(t *testing.T) {
-	type ep struct {
-		n    int
-		name string
-	}
+type ep struct {
+	n    int
+	name string
+}
 
+func TestScanDir(t *testing.T) {
 	var testCases = []struct {
 		files []string
 		epis  []ep
@@ -49,40 +49,23 @@ func TestScanDir(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		fs := afero.NewMemMapFs()
-
-		for _, epi := range testCase.files {
-			if err := afero.WriteFile(fs, epi, nil, 0644); err != nil {
-				t.Fatal(err)
-			}
-		}
-
-		pod := podcast{local: fs}
-
-		if err := pod.scanDir(); err != nil {
-			t.Fatal(err)
-		}
-
-		eps := make([]ep, len(pod.ep))
-
-		i := 0
-		for n, episode := range pod.ep {
-			eps[i].n, eps[i].name = n, episode.filename
-			i++
-		}
-
-		sort.Slice(eps[:], func(i, j int) bool {
-			return eps[i].n < eps[j].n
-		})
-
-		sort.Slice(testCase.epis, func(i, j int) bool {
-			return testCase.epis[i].n < testCase.epis[j].n
-		})
-
-		if !reflect.DeepEqual(eps, testCase.epis) {
-			t.Errorf("want %v, got %v", testCase.epis, eps)
-		}
+		fs := populate(t, testCase.files)
+		eps := scan(t, fs)
+		assertEpisodes(t, eps, testCase.epis)
 	}
+}
+
+func TestScanDirWithDirectories(t *testing.T) {
+	files := []string{"100.avi", "101.avi", "102.mp3"}
+	want := []ep{{100, "100.avi"}, {101, "101.avi"}, {102, "102.mp3"}}
+	fs := populate(t, files)
+
+	if err := fs.Mkdir("103", 0775); err != nil {
+		t.Fatal(err)
+	}
+
+	eps := scan(t, fs)
+	assertEpisodes(t, eps, want)
 }
 
 func TestScanDirError(t *testing.T) {
@@ -98,5 +81,52 @@ func TestScanDirError(t *testing.T) {
 
 	if err := pod.scanDir(); err == nil {
 		t.Error("scanned unreadable directory")
+	}
+}
+
+func populate(t *testing.T, filenames []string) afero.Fs {
+	t.Helper()
+	fs := afero.NewMemMapFs()
+
+	for _, filename := range filenames {
+		if err := afero.WriteFile(fs, filename, nil, 0644); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	return fs
+}
+
+func scan(t *testing.T, fs afero.Fs) []ep {
+	t.Helper()
+	pod := podcast{local: fs}
+
+	if err := pod.scanDir(); err != nil {
+		t.Fatal(err)
+	}
+
+	eps := make([]ep, len(pod.ep))
+
+	i := 0
+	for n, episode := range pod.ep {
+		eps[i].n, eps[i].name = n, episode.filename
+		i++
+	}
+
+	return eps
+}
+
+func assertEpisodes(t *testing.T, got, want []ep) {
+	t.Helper()
+	sort.Slice(got, func(i, j int) bool {
+		return got[i].n < got[j].n
+	})
+
+	sort.Slice(want, func(i, j int) bool {
+		return want[i].n < want[j].n
+	})
+
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("want %v, got %v", want, got)
 	}
 }

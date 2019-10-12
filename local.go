@@ -20,14 +20,18 @@ func (pod *podcast) scanDir() error {
 	}
 
 	pod.ep = make(map[int]*episode)
-
 	numRe := regexp.MustCompile(`\d+`)
 
 	for _, file := range files {
+		if file.IsDir() {
+			continue
+		}
+
 		num, err := strconv.Atoi(numRe.FindString(strings.TrimSuffix(file.Name(), path.Ext(file.Name()))))
 		if err != nil {
 			continue
 		}
+
 		epi := episode{filename: file.Name()}
 		pod.ep[num] = &epi
 	}
