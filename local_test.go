@@ -37,6 +37,15 @@ func TestScanDir(t *testing.T) {
 				{7, "7.mp3"},
 			},
 		},
+		{
+			[]string{"01.mp3", "02.mp3", "25.mp3", "drop.txt", "26.mp3"},
+			[]ep{
+				{1, "01.mp3"},
+				{2, "02.mp3"},
+				{25, "25.mp3"},
+				{26, "26.mp3"},
+			},
+		},
 	}
 
 	for _, testCase := range testCases {
