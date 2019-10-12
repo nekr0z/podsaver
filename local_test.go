@@ -13,20 +13,29 @@ func TestScanDir(t *testing.T) {
 		name string
 	}
 
-	var testCases = [][]ep{
+	var testCases = []struct {
+		files []string
+		epis  []ep
+	}{
 		{
-			{1, "1"},
-			{2, "2"},
-			{3, "3"},
-			{4, "4"},
-			{5, "5"},
+			[]string{"1", "2", "3", "4", "5"},
+			[]ep{
+				{1, "1"},
+				{2, "2"},
+				{3, "3"},
+				{4, "4"},
+				{5, "5"},
+			},
 		},
 		{
-			{1, "1.mp3"},
-			{2, "2.mp3"},
-			{3, "3.mp3"},
-			{5, "5.mp3"},
-			{7, "7.mp3"},
+			[]string{"1.mp3", "2.mp3", "3.mp3", "5.mp3", "7.mp3"},
+			[]ep{
+				{1, "1.mp3"},
+				{2, "2.mp3"},
+				{3, "3.mp3"},
+				{5, "5.mp3"},
+				{7, "7.mp3"},
+			},
 		},
 	}
 
@@ -39,8 +48,8 @@ func TestScanDir(t *testing.T) {
 
 		fs := afero.NewBasePathFs(vfs, "/foo/bar")
 
-		for _, epi := range testCase {
-			if err := afero.WriteFile(fs, epi.name, nil, 0644); err != nil {
+		for _, epi := range testCase.files {
+			if err := afero.WriteFile(fs, epi, nil, 0644); err != nil {
 				t.Fatal(err)
 			}
 		}
@@ -63,12 +72,12 @@ func TestScanDir(t *testing.T) {
 			return eps[i].n < eps[j].n
 		})
 
-		sort.Slice(testCase, func(i, j int) bool {
-			return testCase[i].n < testCase[j].n
+		sort.Slice(testCase.epis, func(i, j int) bool {
+			return testCase.epis[i].n < testCase.epis[j].n
 		})
 
-		if !reflect.DeepEqual(eps, testCase) {
-			t.Errorf("want %v, got %v", testCase, eps)
+		if !reflect.DeepEqual(eps, testCase.epis) {
+			t.Errorf("want %v, got %v", testCase.epis, eps)
 		}
 	}
 }
