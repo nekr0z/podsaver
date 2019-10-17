@@ -45,6 +45,18 @@ func TestMatchFeedErrors(t *testing.T) {
 	if err := pod.matchFeed(); err != errNoMatch {
 		t.Fatalf("expected error: can not possibly match; actual error: %s", err)
 	}
+
+	pod.url = "http://localhost/notthere"
+	if err := pod.matchFeed(); err == nil {
+		t.Fatal("expected error for unreachable feed, got nil")
+	} else if _, ok := err.(feedParseError); !ok {
+		t.Fatalf("expected error for unreachable feed, got: %s", err)
+	}
+
+	pod.local = nil
+	if err := pod.matchFeed(); err == nil || err == errNoMatch {
+		t.Fatalf("expected error for lack of local fs")
+	}
 	server.Close()
 }
 

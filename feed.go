@@ -20,6 +20,19 @@ var (
 	errNoMatch = errors.New("could not match items in feed to local files")
 )
 
+type feedParseError struct {
+	url string
+	err error
+}
+
+func (p feedParseError) Error() string {
+	return fmt.Sprintf("failed to read and parse feed from %s", p.url)
+}
+
+func (p feedParseError) Cause() error {
+	return p.err
+}
+
 func (pod *podcast) matchFeed() error {
 	if pod.url == "" {
 		return errNoFeed
@@ -32,8 +45,10 @@ func (pod *podcast) matchFeed() error {
 	fp := gofeed.NewParser()
 	feed, err := fp.ParseURL(pod.url)
 	if err != nil {
-		msg := fmt.Sprintf("failed to read feed from %s", pod.url)
-		return errors.Wrap(err, msg)
+		return feedParseError{
+			url: pod.url,
+			err: err,
+		}
 	}
 
 	sort.Slice(feed.Items, func(i, j int) bool {
