@@ -57,14 +57,15 @@ func (pod *podcast) matchFeed() error {
 	lastDownloaded := pod.mostCurrent()
 
 	pod.tmp = afero.NewMemMapFs()
-	remote := make(map[int][]string)
+	remote := make(map[int]string)
 	var match int
 	for i, item := range feed.Items {
-		remote[i] = downloadEpisode(pod.tmp, item)
-		for _, rem := range remote[i] {
-			if pod.compareFile(lastDownloaded, rem) {
-				pod.ep[i].id = item.GUID
-			}
+		remote[i], err = downloadEpisode(pod.tmp, item)
+		if err != nil {
+			return err
+		}
+		if pod.compareFile(lastDownloaded, remote[i]) {
+			pod.ep[i].id = item.GUID
 		}
 		if pod.ep[i] != nil && pod.ep[i].id != "" {
 			match = i
@@ -77,11 +78,8 @@ func (pod *podcast) matchFeed() error {
 	for i, n := match-1, lastDownloaded+1; i >= 0; i, n = i-1, n+1 {
 		if feed.Items[i].GUID != "" {
 			pod.ep[n] = &episode{id: feed.Items[i].GUID}
-			if len(remote[i]) != 1 {
-				return fmt.Errorf("no enclosure or multiple enclosures for episode %d", n)
-			}
-			filename := strconv.Itoa(n) + filepath.Ext(remote[i][0])
-			if err := copyFile(pod.tmp, pod.local, remote[i][0], filename); err != nil {
+			filename := strconv.Itoa(n) + filepath.Ext(remote[i])
+			if err := copyFile(pod.tmp, pod.local, remote[i], filename); err != nil {
 				return err
 			} else {
 				pod.ep[n].filename = filename
@@ -92,20 +90,19 @@ func (pod *podcast) matchFeed() error {
 	return nil
 }
 
-func downloadEpisode(fs afero.Fs, item *gofeed.Item) []string {
-	var filenames []string
-	for i, enc := range item.Enclosures {
-		if enc.URL == "" {
-			continue
-		}
-		filename := fmt.Sprintf("%s.%d", item.GUID, i)
-		name, err := downloadFile(fs, filename, enc.URL)
-		if err != nil {
-			continue
-		}
-		filenames = append(filenames, name)
+func downloadEpisode(fs afero.Fs, item *gofeed.Item) (string, error) {
+	if len(item.Enclosures) != 1 {
+		return "", fmt.Errorf("no enclosure or multiple enclosures for episode")
 	}
-	return filenames
+	if item.Enclosures[0].URL == "" {
+		return "", fmt.Errorf("no remote URL for episode")
+	}
+	filename := fmt.Sprintf("%s.", item.GUID)
+	name, err := downloadFile(fs, filename, item.Enclosures[0].URL)
+	if err != nil {
+		return "", err
+	}
+	return name, nil
 }
 
 func downloadFile(fs afero.Fs, filenamePrefix, url string) (string, error) {
