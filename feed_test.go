@@ -13,11 +13,6 @@ import (
 )
 
 func TestMatchFeed(t *testing.T) {
-	pod := podcast{}
-	if err := pod.matchFeed(); err == nil {
-		t.Fatal("expected error for podcast with no feed")
-	}
-
 	pod, server := generatePodcast(t, 15, 10, 10)
 	if err := pod.matchFeed(); err != nil {
 		t.Fatal(err)
@@ -38,6 +33,19 @@ func TestMatchFeed(t *testing.T) {
 			t.Fatalf("filename for episode %d (%s) does not match the expected (%s)", i, pod.ep[i].filename, strconv.Itoa(i)+".pcast")
 		}
 	}
+}
+
+func TestMatchFeedErrors(t *testing.T) {
+	pod := podcast{}
+	if err := pod.matchFeed(); err != errNoFeed {
+		t.Fatal("expected error for podcast with no feed")
+	}
+
+	pod, server := generatePodcast(t, 5, 2, 2)
+	if err := pod.matchFeed(); err != errNoMatch {
+		t.Fatalf("expected error: can not possibly match; actual error: %s", err)
+	}
+	server.Close()
 }
 
 func generatePodcast(t *testing.T, episodes, feedSize, downloaded int) (podcast, *httptest.Server) {

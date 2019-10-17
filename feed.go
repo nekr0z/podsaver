@@ -15,9 +15,14 @@ import (
 	"strings"
 )
 
+var (
+	errNoFeed  = errors.New("no feed available")
+	errNoMatch = errors.New("could not match items in feed to local files")
+)
+
 func (pod *podcast) matchFeed() error {
 	if pod.url == "" {
-		return fmt.Errorf("no feed url available")
+		return errNoFeed
 	}
 
 	if err := pod.scanDir(); err != nil {
@@ -50,7 +55,9 @@ func (pod *podcast) matchFeed() error {
 			match = i
 			break
 		}
-		match = -2
+	}
+	if match == 0 {
+		return errNoMatch
 	}
 	for i, n := match-1, lastDownloaded+1; i >= 0; i, n = i-1, n+1 {
 		if feed.Items[i].GUID != "" {
@@ -95,7 +102,7 @@ func downloadFile(fs afero.Fs, filenamePrefix, url string) (string, error) {
 
 	filename, err := guessFilename(resp)
 	if err != nil {
-		filename = filepath.Base(url)
+		return "", err
 	}
 
 	filename = filenamePrefix + filename
