@@ -74,14 +74,19 @@ func (pod *podcast) matchFeed() error {
 	if match == 0 {
 		return errNoMatch
 	}
+
+	fmt.Println("Successfully matched feed to local directory content.")
+
 	for i, n := match-1, lastDownloaded+1; i >= 0; i, n = i-1, n+1 {
 		if feed.Items[i].GUID != "" {
 			pod.ep[n] = &episode{id: feed.Items[i].GUID}
 			filename := strconv.Itoa(n) + filepath.Ext(remote[i])
+			fmt.Printf("Saving file %s to %s...", strings.TrimPrefix(remote[i], (strconv.Itoa(n))+"."), filename)
 			if err := copyFile(tmpFs, pod.local, remote[i], filename); err != nil {
 				return err
 			} else {
 				pod.ep[n].filename = filename
+				fmt.Printf("done\n")
 			}
 		}
 	}
@@ -105,6 +110,7 @@ func downloadEpisode(fs afero.Fs, item *gofeed.Item) (string, error) {
 }
 
 func downloadFile(fs afero.Fs, filenamePrefix, url string) (string, error) {
+	fmt.Printf("Downloading %s...", url)
 	resp, err := http.Get(url)
 	if err != nil {
 		return "", err
@@ -115,6 +121,8 @@ func downloadFile(fs afero.Fs, filenamePrefix, url string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
+	fmt.Printf("successfully downloaded %s\n", filename)
 
 	filename = filenamePrefix + filename
 
