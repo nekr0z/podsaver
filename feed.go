@@ -56,15 +56,15 @@ func (pod *podcast) matchFeed() error {
 	})
 	lastDownloaded := pod.mostCurrent()
 
-	pod.tmp = afero.NewMemMapFs()
+	tmpFs := afero.NewMemMapFs()
 	remote := make(map[int]string)
 	var match int
 	for i, item := range feed.Items {
-		remote[i], err = downloadEpisode(pod.tmp, item)
+		remote[i], err = downloadEpisode(tmpFs, item)
 		if err != nil {
 			return err
 		}
-		if pod.compareFile(lastDownloaded, remote[i]) {
+		if pod.compareFile(lastDownloaded, tmpFs, remote[i]) {
 			pod.ep[i].id = item.GUID
 		}
 		if pod.ep[i] != nil && pod.ep[i].id != "" {
@@ -79,7 +79,7 @@ func (pod *podcast) matchFeed() error {
 		if feed.Items[i].GUID != "" {
 			pod.ep[n] = &episode{id: feed.Items[i].GUID}
 			filename := strconv.Itoa(n) + filepath.Ext(remote[i])
-			if err := copyFile(pod.tmp, pod.local, remote[i], filename); err != nil {
+			if err := copyFile(tmpFs, pod.local, remote[i], filename); err != nil {
 				return err
 			} else {
 				pod.ep[n].filename = filename
@@ -150,12 +150,12 @@ func guessFilename(resp *http.Response) (string, error) {
 	return filename, nil
 }
 
-func (pod *podcast) compareFile(n int, file string) bool {
+func (pod *podcast) compareFile(n int, tmpFs afero.Fs, file string) bool {
 	f1, err := afero.ReadFile(pod.local, pod.ep[n].filename)
 	if err != nil {
 		return false
 	}
-	f2, err := afero.ReadFile(pod.tmp, file)
+	f2, err := afero.ReadFile(tmpFs, file)
 	if err != nil {
 		return false
 	}
