@@ -66,9 +66,7 @@ func (pod *podcast) matchFeed() error {
 			return err
 		}
 		if pod.compareFile(lastDownloaded, tmpFs, remote[i]) {
-			pod.ep[i].id = item.GUID
-		}
-		if pod.ep[i] != nil && pod.ep[i].id != "" {
+			pod.ep[lastDownloaded].id = item.GUID
 			match = i
 			break
 		}
@@ -152,6 +150,9 @@ func guessFilename(resp *http.Response) (string, error) {
 }
 
 func (pod *podcast) compareFile(n int, tmpFs afero.Fs, file string) bool {
+	if pod.ep[n] == nil {
+		return false
+	}
 	f1, err := afero.ReadFile(pod.local, pod.ep[n].filename)
 	if err != nil {
 		return false

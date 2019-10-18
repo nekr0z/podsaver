@@ -13,7 +13,7 @@ import (
 )
 
 func TestMatchFeed(t *testing.T) {
-	pod, server := generatePodcast(t, 15, 10, 10)
+	pod, server := generatePodcast(t, 15, 10, 10, 2)
 	if err := pod.scanDir(); err != nil {
 		t.Fatal(err)
 	}
@@ -24,7 +24,7 @@ func TestMatchFeed(t *testing.T) {
 
 	server.Close()
 
-	for i := 1; i <= 15; i++ {
+	for i := 2; i <= 15; i++ {
 		if pod.ep[i] == nil {
 			t.Fatalf("episode %d does not exist", i)
 		}
@@ -32,7 +32,34 @@ func TestMatchFeed(t *testing.T) {
 			t.Fatalf("episode %d has no local filename", i)
 		}
 	}
+	for i := 12; i <= 15; i++ {
+		if pod.ep[i].filename != strconv.Itoa(i)+".pcast" {
+			t.Fatalf("filename for episode %d (%s) does not match the expected (%s)", i, pod.ep[i].filename, strconv.Itoa(i)+".pcast")
+		}
+	}
+}
+
+func TestMatchFeedIncomplete(t *testing.T) {
+	pod, server := generatePodcast(t, 15, 10, 2, 11)
+	if err := pod.scanDir(); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := pod.matchFeed(); err != nil {
+		t.Fatal(err)
+	}
+
+	server.Close()
+
 	for i := 11; i <= 15; i++ {
+		if pod.ep[i] == nil {
+			t.Fatalf("episode %d does not exist", i)
+		}
+		if pod.ep[i].filename == "" {
+			t.Fatalf("episode %d has no local filename", i)
+		}
+	}
+	for i := 13; i <= 15; i++ {
 		if pod.ep[i].filename != strconv.Itoa(i)+".pcast" {
 			t.Fatalf("filename for episode %d (%s) does not match the expected (%s)", i, pod.ep[i].filename, strconv.Itoa(i)+".pcast")
 		}
@@ -45,7 +72,7 @@ func TestMatchFeedErrors(t *testing.T) {
 		t.Fatal("expected error for podcast with no feed")
 	}
 
-	pod, server := generatePodcast(t, 5, 2, 2)
+	pod, server := generatePodcast(t, 5, 2, 2, 1)
 	if err := pod.matchFeed(); err != errNotScanned {
 		t.Fatalf("expected error - not scanned local dir")
 	}
@@ -72,7 +99,7 @@ func TestMatchFeedErrors(t *testing.T) {
 	server.Close()
 }
 
-func generatePodcast(t *testing.T, episodes, feedSize, downloaded int) (podcast, *httptest.Server) {
+func generatePodcast(t *testing.T, episodes, feedSize, downloaded, firstDownloaded int) (podcast, *httptest.Server) {
 	t.Helper()
 
 	fs := afero.NewMemMapFs()
@@ -82,7 +109,7 @@ func generatePodcast(t *testing.T, episodes, feedSize, downloaded int) (podcast,
 	}
 
 	lfs := afero.NewMemMapFs()
-	for i := 1; i <= downloaded; i++ {
+	for i := firstDownloaded; i < downloaded+firstDownloaded; i++ {
 		filename := fmt.Sprintf("episode%02d.pcast", i)
 		if err := copyFile(fs, lfs, filename, filename); err != nil {
 			t.Fatal(err)
