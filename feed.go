@@ -150,19 +150,6 @@ func guessFilename(resp *http.Response) (string, error) {
 	return filename, nil
 }
 
-func (pod *podcast) mostCurrent() (maxNumber int) {
-	const maxUint = ^uint(0)
-	const maxInt = int(maxUint >> 1)
-	const minInt = -maxInt - 1
-	maxNumber = minInt
-	for n := range pod.ep {
-		if n > maxNumber {
-			maxNumber = n
-		}
-	}
-	return maxNumber
-}
-
 func (pod *podcast) compareFile(n int, file string) bool {
 	f1, err := afero.ReadFile(pod.local, pod.ep[n].filename)
 	if err != nil {
@@ -173,15 +160,4 @@ func (pod *podcast) compareFile(n int, file string) bool {
 		return false
 	}
 	return bytes.Equal(f1, f2)
-}
-
-func copyFile(from, to afero.Fs, fromName, toName string) error {
-	data, err := afero.ReadFile(from, fromName)
-	if err != nil {
-		return err
-	}
-	if err := afero.WriteFile(to, toName, data, 0644); err != nil {
-		return err
-	}
-	return nil
 }

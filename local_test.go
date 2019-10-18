@@ -84,6 +84,55 @@ func TestScanDirError(t *testing.T) {
 	}
 }
 
+func TestRenameDownloaded(t *testing.T) {
+	var testCases = []struct {
+		files []string
+		want  []string
+	}{
+		{
+			files: []string{"6", "7", "8", "9", "10", "11"},
+			want:  []string{"06", "07", "08", "09", "10", "11"},
+		},
+		{
+			files: []string{"6", "70", "08", "196", "10", "11"},
+			want:  []string{"006", "070", "008", "196", "010", "011"},
+		},
+		{
+			files: []string{"65", "70", "0000867", "12345", "103", "1"},
+			want:  []string{"00065", "00070", "00867", "12345", "00103", "00001"},
+		},
+		{
+			files: []string{"6.html", "70.mp3", "08.avi", "196.pc", "10.txt", "11"},
+			want:  []string{"006.html", "070.mp3", "008.avi", "196.pc", "010.txt", "011"},
+		},
+	}
+	for _, testCase := range testCases {
+		fs := populate(t, testCase.files)
+		pod := podcast{local: fs}
+		if err := pod.scanDir(); err != nil {
+			t.Fatal(err)
+		}
+
+		if err := pod.renameDownloaded(); err != nil {
+			t.Fatal(err)
+		}
+
+		var got []string
+		for _, ep := range pod.ep {
+			got = append(got, ep.filename)
+		}
+		assertStringSlices(t, got, testCase.want)
+
+		eps := scan(t, fs)
+		got = []string{}
+		for _, ep := range eps {
+			got = append(got, ep.name)
+		}
+
+		assertStringSlices(t, got, testCase.want)
+	}
+}
+
 func populate(t *testing.T, filenames []string) afero.Fs {
 	t.Helper()
 	fs := afero.NewMemMapFs()
@@ -124,6 +173,21 @@ func assertEpisodes(t *testing.T, got, want []ep) {
 
 	sort.Slice(want, func(i, j int) bool {
 		return want[i].n < want[j].n
+	})
+
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("want %v, got %v", want, got)
+	}
+}
+
+func assertStringSlices(t *testing.T, got, want []string) {
+	t.Helper()
+	sort.Slice(got, func(i, j int) bool {
+		return got[i] < got[j]
+	})
+
+	sort.Slice(want, func(i, j int) bool {
+		return want[i] < want[j]
 	})
 
 	if !reflect.DeepEqual(got, want) {
