@@ -14,6 +14,10 @@ import (
 
 func TestMatchFeed(t *testing.T) {
 	pod, server := generatePodcast(t, 15, 10, 10)
+	if err := pod.scanDir(); err != nil {
+		t.Fatal(err)
+	}
+
 	if err := pod.matchFeed(); err != nil {
 		t.Fatal(err)
 	}
@@ -42,6 +46,14 @@ func TestMatchFeedErrors(t *testing.T) {
 	}
 
 	pod, server := generatePodcast(t, 5, 2, 2)
+	if err := pod.matchFeed(); err != errNotScanned {
+		t.Fatalf("expected error - not scanned local dir")
+	}
+
+	if err := pod.scanDir(); err != nil {
+		t.Fatal(err)
+	}
+
 	if err := pod.matchFeed(); err != errNoMatch {
 		t.Fatalf("expected error: can not possibly match; actual error: %s", err)
 	}

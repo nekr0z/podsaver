@@ -16,8 +16,9 @@ import (
 )
 
 var (
-	errNoFeed  = errors.New("no feed available")
-	errNoMatch = errors.New("could not match items in feed to local files")
+	errNoFeed     = errors.New("no feed available")
+	errNoMatch    = errors.New("could not match items in feed to local files")
+	errNotScanned = errors.New("no data on downloaded episodes - not scanned?")
 )
 
 type feedParseError struct {
@@ -38,8 +39,8 @@ func (pod *podcast) matchFeed() error {
 		return errNoFeed
 	}
 
-	if err := pod.scanDir(); err != nil {
-		return err
+	if pod.ep == nil {
+		return errNotScanned
 	}
 
 	fp := gofeed.NewParser()
