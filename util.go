@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"github.com/spf13/afero"
 )
 
@@ -26,4 +27,16 @@ func (pod *podcast) mostCurrent() (maxNumber int) {
 		}
 	}
 	return maxNumber
+}
+
+func compare(fs1 afero.Fs, file1 string, fs2 afero.Fs, file2 string) (bool, error) {
+	f1, err := afero.ReadFile(fs1, file1)
+	if err != nil {
+		return false, err
+	}
+	f2, err := afero.ReadFile(fs2, file2)
+	if err != nil {
+		return false, err
+	}
+	return bytes.Equal(f1, f2), nil
 }

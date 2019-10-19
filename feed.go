@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
 	"github.com/mmcdole/gofeed"
 	"github.com/pkg/errors"
@@ -59,19 +58,23 @@ func (pod *podcast) matchFeed() error {
 
 	tmpFs := afero.NewMemMapFs()
 	remote := make(map[int]string)
-	var match int
+	match := -1
 	for i, item := range feed.Items {
 		remote[i], err = downloadEpisode(tmpFs, item)
 		if err != nil {
 			return err
 		}
-		if pod.compareFile(lastDownloaded, tmpFs, remote[i]) {
+		m, err := compare(pod.local, pod.ep[lastDownloaded].filename, tmpFs, remote[i])
+		if err != nil {
+			return err
+		}
+		if m {
 			pod.ep[lastDownloaded].id = item.GUID
 			match = i
 			break
 		}
 	}
-	if match == 0 {
+	if match == -1 {
 		return errNoMatch
 	}
 
@@ -155,19 +158,4 @@ func guessFilename(resp *http.Response) (string, error) {
 	}
 
 	return filename, nil
-}
-
-func (pod *podcast) compareFile(n int, tmpFs afero.Fs, file string) bool {
-	if pod.ep[n] == nil {
-		return false
-	}
-	f1, err := afero.ReadFile(pod.local, pod.ep[n].filename)
-	if err != nil {
-		return false
-	}
-	f2, err := afero.ReadFile(tmpFs, file)
-	if err != nil {
-		return false
-	}
-	return bytes.Equal(f1, f2)
 }

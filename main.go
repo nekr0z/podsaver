@@ -19,7 +19,12 @@ type podcast struct {
 }
 
 func main() {
-	path := flag.String("p", ".", "location of the locally downloaded episodes")
+	wd, err := os.Getwd()
+	if err != nil {
+		os.Exit(1)
+	}
+
+	path := flag.String("p", wd, "location of the locally downloaded episodes")
 	rename := flag.Bool("r", false, "rename the already downloaded episodes if needed")
 	flag.Parse()
 	var url string
@@ -43,6 +48,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "error while scanning local episodes: %s\n", err)
 		os.Exit(2)
 	}
+	fmt.Printf("have %d episodes locally, last downloaded is #%d\n", len(pod.ep), pod.mostCurrent())
 
 	if err := pod.matchFeed(); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %s\n", err)
