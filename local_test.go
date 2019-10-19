@@ -75,12 +75,16 @@ func TestScanDirError(t *testing.T) {
 		t.Error("scanned nothing")
 	}
 
-	fs := afero.NewBasePathFs(afero.NewMemMapFs(), "/bar/")
-
-	pod.local = fs
+	pod.local = afero.NewBasePathFs(afero.NewMemMapFs(), "/bar/")
 
 	if err := pod.scanDir(); err == nil {
 		t.Error("scanned unreadable directory")
+	}
+
+	pod.local = afero.NewBasePathFs(afero.NewMemMapFs(), "/")
+
+	if err := pod.scanDir(); err != errNoEpisodes {
+		t.Error("expected error on empty directory")
 	}
 }
 
