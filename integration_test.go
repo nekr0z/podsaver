@@ -19,7 +19,7 @@ func TestAerostat(t *testing.T) {
 	fileserver := http.FileServer(httpFs.Dir("/server"))
 	server := httptest.NewServer(fileserver)
 
-	cmd := exec.Command("./podsaver", "-p", "testdata/downloaded", fmt.Sprintf("%s/aerostat.rss", server.URL))
+	cmd := exec.Command("./podsaver", "-r", "-p", "testdata/downloaded", fmt.Sprintf("%s/aerostat.rss", server.URL))
 	cmd.Stdout = os.Stdout
 	if err := cmd.Run(); err != nil {
 		t.Errorf("podsaver returned error: %s", err)
@@ -35,6 +35,10 @@ func TestAerostat(t *testing.T) {
 
 	if err := fs.Remove("downloaded/750.mp3"); err != nil {
 		t.Errorf("could not remove file: %s", err)
+	}
+
+	if err := fs.Rename("downloaded/015.mp3", "downloaded/15.mp3"); err != nil {
+		t.Errorf("015.mp3 could not be renamed back: %s", err)
 	}
 
 	server.Close()
