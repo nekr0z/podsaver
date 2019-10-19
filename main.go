@@ -4,6 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"github.com/spf13/afero"
+	"io"
+	"io/ioutil"
 	"os"
 )
 
@@ -18,7 +20,16 @@ type podcast struct {
 	ep    map[int]*episode // key would be the episode number
 }
 
+var (
+	output io.Writer
+)
+
+func init() {
+	output = ioutil.Discard
+}
+
 func main() {
+	output = os.Stdout
 	wd, err := os.Getwd()
 	if err != nil {
 		os.Exit(1)
@@ -48,7 +59,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "error while scanning local episodes: %s\n", err)
 		os.Exit(2)
 	}
-	fmt.Printf("have %d episodes locally, last downloaded is #%d\n", len(pod.ep), pod.mostCurrent())
+	fmt.Fprintf(output, "have %d episodes locally, last downloaded is #%d\n", len(pod.ep), pod.mostCurrent())
 
 	if err := pod.matchFeed(); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %s\n", err)
@@ -61,5 +72,5 @@ func main() {
 		}
 	}
 
-	fmt.Println("all done!")
+	fmt.Fprintf(output, "all done!\n")
 }
