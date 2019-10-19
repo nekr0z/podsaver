@@ -2,11 +2,16 @@ package main
 
 import (
 	"fmt"
+	"github.com/pkg/errors"
 	"github.com/spf13/afero"
 	"path"
 	"regexp"
 	"strconv"
 	"strings"
+)
+
+var (
+	errNoEpisodes = errors.New("no episodes have been found")
 )
 
 func (pod *podcast) scanDir() error {
@@ -34,6 +39,10 @@ func (pod *podcast) scanDir() error {
 
 		epi := episode{filename: file.Name()}
 		pod.ep[num] = &epi
+	}
+
+	if len(pod.ep) == 0 {
+		return errNoEpisodes
 	}
 
 	return nil
