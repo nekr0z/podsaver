@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/mmcdole/gofeed"
 	"github.com/pkg/errors"
@@ -141,13 +142,57 @@ func downloadFile(fs afero.Fs, filenamePrefix, url string) (string, error) {
 }
 
 func compareRemote(url string, fs afero.Fs, filename string) (bool, error) {
-	tmpfs := afero.NewMemMapFs()
-	dl, err := downloadFile(tmpfs, "", url)
+	const chunkSize = 1024 * 16
+
+	info, err := fs.Stat(filename)
 	if err != nil {
 		return false, err
 	}
 
-	return compare(tmpfs, dl, fs, filename)
+	resp, err := http.Get(url)
+	if err != nil {
+		return false, err
+	}
+	defer resp.Body.Close()
+
+	f, err := fs.Open(filename)
+	if err != nil {
+		return false, err
+	}
+	defer f.Close()
+
+	bf := make([]byte, chunkSize)
+	br := make([]byte, chunkSize)
+
+	for i := 0; int64(i) < info.Size()/chunkSize; i++ {
+		if _, err := io.ReadFull(f, bf); err != nil {
+			return false, err
+		}
+
+		if _, err := io.ReadFull(resp.Body, br); err != nil {
+			if err == io.EOF || err == io.ErrUnexpectedEOF {
+				return false, nil
+			}
+			return false, err
+		}
+
+		if !bytes.Equal(bf, br) {
+			return false, nil
+		}
+	}
+
+	bf = make([]byte, info.Size()%chunkSize)
+	br = make([]byte, info.Size()%chunkSize)
+
+	if _, err := io.ReadFull(f, bf); err != nil {
+		return false, err
+	}
+
+	if _, err := io.ReadFull(resp.Body, br); err != nil && err != io.EOF && err != io.ErrUnexpectedEOF {
+		return false, err
+	}
+
+	return bytes.Equal(bf, br), nil
 }
 
 func guessFilename(resp *http.Response) (string, error) {
