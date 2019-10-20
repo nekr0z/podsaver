@@ -140,6 +140,16 @@ func downloadFile(fs afero.Fs, filenamePrefix, url string) (string, error) {
 	return filename, err
 }
 
+func compareRemote(url string, fs afero.Fs, filename string) (bool, error) {
+	tmpfs := afero.NewMemMapFs()
+	dl, err := downloadFile(tmpfs, "", url)
+	if err != nil {
+		return false, err
+	}
+
+	return compare(tmpfs, dl, fs, filename)
+}
+
 func guessFilename(resp *http.Response) (string, error) {
 	filename := resp.Request.URL.Path
 	if cd := resp.Header.Get("Content-Disposition"); cd != "" {

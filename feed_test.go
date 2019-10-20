@@ -171,3 +171,56 @@ func generateRandomFile(t *testing.T, fs afero.Fs, name string, maxBytes int) {
 		t.Fatal(err)
 	}
 }
+
+func TestCompareRemote(t *testing.T) {
+	fs := afero.NewBasePathFs(afero.NewOsFs(), "testdata/")
+	httpFs := afero.NewHttpFs(fs)
+	fileserver := http.FileServer(httpFs.Dir("/downloaded"))
+	server := httptest.NewServer(fileserver)
+	local := afero.NewBasePathFs(fs, "/downloaded")
+
+	ok, err := compareRemote(fmt.Sprintf("%s/749.mp3", server.URL), local, "15.mp3")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ok {
+		t.Errorf("different files should differ")
+	}
+
+	ok, err = compareRemote(fmt.Sprintf("%s/15.mp3", server.URL), local, "15.mp3")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !ok {
+		t.Errorf("same file should be the same")
+	}
+
+	server.Close()
+}
+
+func BenchmarkCompareRemote(b *testing.B) {
+	fs := afero.NewBasePathFs(afero.NewOsFs(), "testdata/")
+	httpFs := afero.NewHttpFs(fs)
+	fileserver := http.FileServer(httpFs.Dir("/downloaded"))
+	server := httptest.NewServer(fileserver)
+	local := afero.NewBasePathFs(fs, "/downloaded")
+	url := "https://audio.vgtrk.com/download?id=2441689"
+
+	ok, err := compareRemote(url, local, "15.mp3")
+	if err != nil {
+		b.Fatal(err)
+	}
+	if ok {
+		b.Errorf("different files should differ")
+	}
+
+	ok, err = compareRemote(url, local, "749.mp3")
+	if err != nil {
+		b.Fatal(err)
+	}
+	if !ok {
+		b.Errorf("same file should be the same")
+	}
+
+	server.Close()
+}
