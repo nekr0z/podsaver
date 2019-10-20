@@ -3,6 +3,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/spf13/afero"
 	"net/http"
@@ -21,6 +22,7 @@ func TestAerostat(t *testing.T) {
 
 	cmd := exec.Command("./podsaver", "-r", "-p", "testdata/downloaded", fmt.Sprintf("%s/aerostat.rss", server.URL))
 	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stdout
 	if err := cmd.Run(); err != nil {
 		t.Errorf("podsaver returned error: %s", err)
 	}
@@ -42,4 +44,16 @@ func TestAerostat(t *testing.T) {
 	}
 
 	server.Close()
+}
+
+func compare(fs1 afero.Fs, file1 string, fs2 afero.Fs, file2 string) (bool, error) {
+	f1, err := afero.ReadFile(fs1, file1)
+	if err != nil {
+		return false, err
+	}
+	f2, err := afero.ReadFile(fs2, file2)
+	if err != nil {
+		return false, err
+	}
+	return bytes.Equal(f1, f2), nil
 }

@@ -11,7 +11,6 @@ import (
 
 type episode struct {
 	filename string // local filename
-	id       string // ID in feed
 }
 
 type podcast struct {

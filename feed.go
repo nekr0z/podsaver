@@ -57,20 +57,20 @@ func (pod *podcast) matchFeed() error {
 	})
 	lastDownloaded := pod.mostCurrent()
 
-	tmpFs := afero.NewMemMapFs()
-	remote := make(map[int]string)
 	match := -1
 	for i, item := range feed.Items {
-		remote[i], err = downloadEpisode(tmpFs, item)
+		if len(item.Enclosures) != 1 {
+			return fmt.Errorf("no enclosure or multiple enclosures for episode")
+		}
+		if item.Enclosures[0].URL == "" {
+			return fmt.Errorf("no remote URL for episode")
+		}
+
+		ok, err := compareRemote(item.Enclosures[0].URL, pod.local, pod.ep[lastDownloaded].filename)
 		if err != nil {
 			return err
 		}
-		m, err := compare(pod.local, pod.ep[lastDownloaded].filename, tmpFs, remote[i])
-		if err != nil {
-			return err
-		}
-		if m {
-			pod.ep[lastDownloaded].id = item.GUID
+		if ok {
 			match = i
 			break
 		}
@@ -79,42 +79,33 @@ func (pod *podcast) matchFeed() error {
 		return errNoMatch
 	}
 
-	fmt.Fprintf(output, "Successfully matched feed to local directory content.\n")
+	fmt.Fprintf(output, "Successfully matched feed to local directory content; episode #%d is #%d in the feed.\n", lastDownloaded, match)
 
 	for i, n := match-1, lastDownloaded+1; i >= 0; i, n = i-1, n+1 {
-		if feed.Items[i].GUID != "" {
-			pod.ep[n] = &episode{id: feed.Items[i].GUID}
-			filename := strconv.Itoa(n) + filepath.Ext(remote[i])
-			fmt.Fprintf(output, "Saving file %s to %s...", strings.TrimPrefix(remote[i], (strconv.Itoa(n))+"."), filename)
-			if err := copyFile(tmpFs, pod.local, remote[i], filename); err != nil {
-				return err
-			} else {
-				pod.ep[n].filename = filename
-				fmt.Fprintf(output, "done\n")
-			}
+		if len(feed.Items[i].Enclosures) != 1 {
+			return fmt.Errorf("no enclosure or multiple enclosures for episode")
+		}
+		if err := pod.downloadEpisode(n, feed.Items[i].Enclosures[0].URL); err != nil {
+			return err
 		}
 	}
 
 	return nil
 }
 
-func downloadEpisode(fs afero.Fs, item *gofeed.Item) (string, error) {
-	if len(item.Enclosures) != 1 {
-		return "", fmt.Errorf("no enclosure or multiple enclosures for episode")
-	}
-	if item.Enclosures[0].URL == "" {
-		return "", fmt.Errorf("no remote URL for episode")
-	}
-	filename := fmt.Sprintf("%s.", item.GUID)
-	name, err := downloadFile(fs, filename, item.Enclosures[0].URL)
+func (pod *podcast) downloadEpisode(n int, url string) error {
+	fmt.Fprintf(output, "Fetching episode #%d: ", n)
+
+	file, err := downloadFile(pod.local, strconv.Itoa(n), url)
 	if err != nil {
-		return "", err
+		return err
 	}
-	return name, nil
+	pod.ep[n] = &episode{filename: file}
+	return nil
 }
 
 func downloadFile(fs afero.Fs, filenamePrefix, url string) (string, error) {
-	fmt.Fprintf(output, "Downloading %s...", url)
+	fmt.Fprintf(output, "downloading %s...", url)
 	resp, err := http.Get(url)
 	if err != nil {
 		return "", err
@@ -126,7 +117,7 @@ func downloadFile(fs afero.Fs, filenamePrefix, url string) (string, error) {
 		return "", err
 	}
 
-	filename = filenamePrefix + filename
+	filename = filenamePrefix + filepath.Ext(filename)
 
 	out, err := fs.Create(filename)
 	if err != nil {
@@ -144,10 +135,13 @@ func downloadFile(fs afero.Fs, filenamePrefix, url string) (string, error) {
 func compareRemote(url string, fs afero.Fs, filename string) (bool, error) {
 	const chunkSize = 1024 * 16
 
+	fmt.Fprintf(output, "comparing %s to %s...\n", url, filename)
 	info, err := fs.Stat(filename)
 	if err != nil {
 		return false, err
 	}
+
+	length := info.Size()
 
 	resp, err := http.Get(url)
 	if err != nil {
@@ -164,7 +158,7 @@ func compareRemote(url string, fs afero.Fs, filename string) (bool, error) {
 	bf := make([]byte, chunkSize)
 	br := make([]byte, chunkSize)
 
-	for i := 0; int64(i) < info.Size()/chunkSize; i++ {
+	for i := 0; int64(i) < length/chunkSize; i++ {
 		if _, err := io.ReadFull(f, bf); err != nil {
 			return false, err
 		}
@@ -181,18 +175,29 @@ func compareRemote(url string, fs afero.Fs, filename string) (bool, error) {
 		}
 	}
 
-	bf = make([]byte, info.Size()%chunkSize)
-	br = make([]byte, info.Size()%chunkSize)
+	bf = make([]byte, length%chunkSize)
+	br = make([]byte, length%chunkSize)
 
 	if _, err := io.ReadFull(f, bf); err != nil {
 		return false, err
 	}
 
-	if _, err := io.ReadFull(resp.Body, br); err != nil && err != io.EOF && err != io.ErrUnexpectedEOF {
+	if _, err := io.ReadFull(resp.Body, br); err != nil {
+		if err == io.EOF || err == io.ErrUnexpectedEOF {
+			return false, nil
+		}
 		return false, err
 	}
 
-	return bytes.Equal(bf, br), nil
+	if !bytes.Equal(bf, br) {
+		return false, nil
+	}
+
+	if n, err := resp.Body.Read(br); n != 0 || err != io.EOF {
+		return false, nil
+	}
+
+	return true, nil
 }
 
 func guessFilename(resp *http.Response) (string, error) {
