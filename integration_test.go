@@ -10,6 +10,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"os/exec"
+	"strconv"
 	"testing"
 )
 
@@ -37,6 +38,12 @@ func TestAerostat(t *testing.T) {
 
 	if err := fs.Remove("downloaded/750.mp3"); err != nil {
 		t.Errorf("could not remove file: %s", err)
+	}
+
+	for i := 742; i <= 748; i++ {
+		if err := fs.Remove("downloaded/" + strconv.Itoa(i) + ".mp3"); err != nil {
+			t.Errorf("could not remove file: %s", err)
+		}
 	}
 
 	if err := fs.Rename("downloaded/015.mp3", "downloaded/15.mp3"); err != nil {

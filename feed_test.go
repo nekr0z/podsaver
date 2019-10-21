@@ -51,7 +51,7 @@ func TestMatchFeedIncomplete(t *testing.T) {
 
 	server.Close()
 
-	for i := 11; i <= 15; i++ {
+	for i := 6; i <= 15; i++ {
 		if pod.ep[i] == nil {
 			t.Fatalf("episode %d does not exist", i)
 		}
@@ -60,6 +60,12 @@ func TestMatchFeedIncomplete(t *testing.T) {
 		}
 	}
 	for i := 13; i <= 15; i++ {
+		if pod.ep[i].filename != strconv.Itoa(i)+".pcast" {
+			t.Fatalf("filename for episode %d (%s) does not match the expected (%s)", i, pod.ep[i].filename, strconv.Itoa(i)+".pcast")
+		}
+	}
+
+	for i := 6; i <= 10; i++ {
 		if pod.ep[i].filename != strconv.Itoa(i)+".pcast" {
 			t.Fatalf("filename for episode %d (%s) does not match the expected (%s)", i, pod.ep[i].filename, strconv.Itoa(i)+".pcast")
 		}

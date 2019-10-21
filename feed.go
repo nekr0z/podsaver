@@ -16,9 +16,10 @@ import (
 )
 
 var (
-	errNoFeed     = errors.New("no feed available")
-	errNoMatch    = errors.New("could not match items in feed to local files")
-	errNotScanned = errors.New("no data on downloaded episodes - not scanned?")
+	errNoFeed      = errors.New("no feed available")
+	errNoMatch     = errors.New("could not match items in feed to local files")
+	errNoEnclosure = errors.New("no enclosure or multiple enclosures for episode")
+	errNotScanned  = errors.New("no data on downloaded episodes - not scanned?")
 )
 
 type feedParseError struct {
@@ -60,7 +61,7 @@ func (pod *podcast) matchFeed() error {
 	match := -1
 	for i, item := range feed.Items {
 		if len(item.Enclosures) != 1 {
-			return fmt.Errorf("no enclosure or multiple enclosures for episode")
+			return errNoEnclosure
 		}
 		if item.Enclosures[0].URL == "" {
 			return fmt.Errorf("no remote URL for episode")
@@ -83,10 +84,21 @@ func (pod *podcast) matchFeed() error {
 
 	for i, n := match-1, lastDownloaded+1; i >= 0; i, n = i-1, n+1 {
 		if len(feed.Items[i].Enclosures) != 1 {
-			return fmt.Errorf("no enclosure or multiple enclosures for episode")
+			return errNoEnclosure
 		}
 		if err := pod.downloadEpisode(n, feed.Items[i].Enclosures[0].URL); err != nil {
 			return err
+		}
+	}
+
+	for i, n := 0, pod.mostCurrent(); i < len(feed.Items); i, n = i+1, n-1 {
+		if _, ok := pod.ep[n]; !ok {
+			if len(feed.Items[i].Enclosures) != 1 {
+				return errNoEnclosure
+			}
+			if err := pod.downloadEpisode(n, feed.Items[i].Enclosures[0].URL); err != nil {
+				return err
+			}
 		}
 	}
 
