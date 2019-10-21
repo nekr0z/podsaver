@@ -52,7 +52,7 @@ var (
 	binName           string
 	goos              string
 	goarch            string
-	keyID             string = "8BCDD592F2DE32D4"
+	keyID             string = "B5C7C6EAA5B9B41A"
 	version           string
 	btime             int64
 	packFilesRequired = []packFile{
