@@ -145,7 +145,7 @@ func downloadFile(fs afero.Fs, filenamePrefix, url string) (string, error) {
 }
 
 func compareRemote(url string, fs afero.Fs, filename string) (bool, error) {
-	const chunkSize = 1024 * 16
+	const chunkSize = 1024 * 64
 
 	fmt.Fprintf(output, "comparing %s to %s...\n", url, filename)
 	info, err := fs.Stat(filename)
