@@ -35,7 +35,8 @@ type podcast struct {
 }
 
 var (
-	output io.Writer
+	output  io.Writer
+	version string = "custom-build"
 )
 
 func init() {
@@ -44,6 +45,9 @@ func init() {
 
 func main() {
 	output = os.Stdout
+
+	fmt.Fprintf(output, "podsaver version %s\n", version)
+
 	wd, err := os.Getwd()
 	if err != nil {
 		os.Exit(1)
