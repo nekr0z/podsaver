@@ -16,8 +16,27 @@
 package main
 
 import (
+	"github.com/spf13/afero"
 	"testing"
 )
+
+func TestCopyFileErrors(t *testing.T) {
+	fs := afero.NewMemMapFs()
+
+	if err := copyFile(fs, fs, "foo", "bar"); err == nil {
+		t.Fatalf("should have returned error for non-existing file")
+	}
+
+	if err := afero.WriteFile(fs, "foo", nil, 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	fsr := afero.NewReadOnlyFs(fs)
+
+	if err := copyFile(fs, fsr, "foo", "bar"); err == nil {
+		t.Fatalf("should have returned error for wirting on read-only file")
+	}
+}
 
 func TestMostCurrent(t *testing.T) {
 	testCases := []struct {
