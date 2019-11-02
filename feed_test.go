@@ -245,3 +245,15 @@ func BenchmarkCompareRemote(b *testing.B) {
 
 	server.Close()
 }
+
+func TestFeedParseError(t *testing.T) {
+	err := feedParseError{"none", errNotScanned}
+
+	if s := err.Error(); s != "failed to read and parse feed from none" {
+		t.Fatalf("wrong message: %s", s)
+	}
+
+	if e := err.Cause(); e != errNotScanned {
+		t.Fatalf("want %s, got %s", errNotScanned, e)
+	}
+}
