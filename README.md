@@ -1,6 +1,8 @@
 # podsaver
 an app to download episodes of your favourite podcast to your local archive
 
+[![Build Status](https://travis-ci.org/nekr0z/podsaver.svg?branch=master)](https://travis-ci.org/nekr0z/podsaver) [![codecov](https://codecov.io/gh/nekr0z/podsaver/branch/master/graph/badge.svg)](https://codecov.io/gh/nekr0z/podsaver) [![GolangCI](https://golangci.com/badges/github.com/nekr0z/podsaver.svg)](https://golangci.com) 
+
 ##### Table of Contents
 * [Why](#why)
 * [Usage](#usage)
