@@ -34,7 +34,7 @@ func TestCopyFileErrors(t *testing.T) {
 	fsr := afero.NewReadOnlyFs(fs)
 
 	if err := copyFile(fs, fsr, "foo", "bar"); err == nil {
-		t.Fatalf("should have returned error for wirting on read-only file")
+		t.Fatalf("should have returned error for writing on read-only file")
 	}
 }
 
