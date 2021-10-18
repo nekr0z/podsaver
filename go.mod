@@ -6,6 +6,7 @@ require (
 	github.com/mmcdole/gofeed v1.1.3
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/afero v1.6.0
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
 
 go 1.13
