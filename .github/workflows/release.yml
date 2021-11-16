@@ -1,0 +1,81 @@
+name: release
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      GOPROXY: direct
+    steps:
+      - uses: actions/checkout@v2.4.0
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v2
+        with:
+          go-version: 1.16
+
+      - name: install nekr0z/changelog
+        run: |
+          go install github.com/nekr0z/changelog/cmd/changelog@latest
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 2.7
+          bundler-cache: true
+
+      - name: install fpm
+        run: gem install fpm
+
+      - name: build packages
+        run: |
+          git fetch --tags --force
+          mkdir release
+          changelog -n "Evgeny Kuznetsov" -e "evgeny@kuznetsov.md" -p "podsaver" CHANGELOG.md
+          VER=$(go generate)
+          for ARCH in amd64 386 arm arm64; do
+            GOARCH=$ARCH CGO_ENABLED=0 go build -ldflags "-s -w -buildid= -X main.version=$VER"
+            tar -czf release/podsaver-$VER-linux-$ARCH.tar.gz podsaver LICENSE README.md CHANGELOG.md SOURCE.txt
+            fpm -t deb -s dir \
+              -a $ARCH \
+              -n podsaver -v ${VER%+*} \
+              -m "Evgeny Kuznetsov <evgeny@kuznetsov.md>" \
+              --deb-changelog debian.changelog \
+              --license GPL-3 \
+              --deb-priority optional \
+              --url https://github.com/nekr0z/podsaver \
+              --category net \
+              --vendor "Evgeny Kuznetsov <evgeny@kuznetsov.md>" \
+              --description "An app to download episodes of your favourite podcast to your local archive." \
+              LICENSE=/usr/share/doc/podsaver/ \
+              README.md=/usr/share/doc/podsaver/ \
+              SOURCE.txt=/usr/share/doc/podsaver \
+              podsaver=/usr/bin/
+            mv *.deb release/
+          done
+          for ARCH in amd64 386; do
+            GOOS=windows GOARCH=$ARCH go build -ldflags "-s -w -buildid= -X main.version=$VER"
+            zip -q release/podsaver-$VER-windows-$ARCH.zip podsaver.exe LICENSE README.md CHANGELOG.md
+          done
+          cd release
+          fpm -s deb -t deb -a i386 *386.deb
+          rm *_386.deb
+          fpm -s deb -t deb -a armel *arm.deb
+          rm *arm.deb
+
+      - name: release
+        uses: marvinpinto/action-automatic-releases@v1.2.1
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          prerelease: false
+          files: "release/*"
+
+      - name: trigger repository update
+        uses: appleboy/ssh-action@v0.1.4
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: podsaver

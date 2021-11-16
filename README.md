@@ -1,7 +1,7 @@
 # podsaver
 an app to download episodes of your favourite podcast to your local archive
 
-[![Build Status](https://travis-ci.org/nekr0z/podsaver.svg?branch=master)](https://travis-ci.org/nekr0z/podsaver) [![codecov](https://codecov.io/gh/nekr0z/podsaver/branch/master/graph/badge.svg)](https://codecov.io/gh/nekr0z/podsaver) [![Go Report Card](https://goreportcard.com/badge/github.com/nekr0z/podsaver)](https://goreportcard.com/report/github.com/nekr0z/podsaver)
+![Build Status](https://github.com/nekr0z/podsaver/actions/workflows/build.yml/badge.svg) [![codecov](https://codecov.io/gh/nekr0z/podsaver/branch/master/graph/badge.svg)](https://codecov.io/gh/nekr0z/podsaver) [![Go Report Card](https://goreportcard.com/badge/github.com/nekr0z/podsaver)](https://goreportcard.com/report/github.com/nekr0z/podsaver)
 
 ##### Table of Contents
 * [Why](#why)
@@ -64,11 +64,6 @@ Had you used `-r` option, existing files would be renamed, too:
 13.mp3
 14.mp3
 15.mp3
-```
-
-## Building the app
-```
-go run build.go
 ```
 
 ## Credits

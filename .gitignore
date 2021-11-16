@@ -2,3 +2,5 @@ podsaver
 secrets.tar
 *.asc
 .*.swp
+/release/
+/debian.changelog
