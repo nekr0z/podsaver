@@ -1,14 +1,12 @@
 # podsaver
 an app to download episodes of your favourite podcast to your local archive
 
-![Build Status](https://github.com/nekr0z/podsaver/actions/workflows/build.yml/badge.svg) [![codecov](https://codecov.io/gh/nekr0z/podsaver/branch/master/graph/badge.svg)](https://codecov.io/gh/nekr0z/podsaver) [![Go Report Card](https://goreportcard.com/badge/github.com/nekr0z/podsaver)](https://goreportcard.com/report/github.com/nekr0z/podsaver)
+![Build Status](https://github.com/nekr0z/podsaver/actions/workflows/build.yml/badge.svg) [![codecov](https://codecov.io/gh/nekr0z/podsaver/branch/master/graph/badge.svg)](https://codecov.io/gh/nekr0z/podsaver) [![Go Report Card](https://goreportcard.com/badge/evgenykuznetsov.org/go/podsaver)](https://goreportcard.com/report/evgenykuznetsov.org/go/podsaver)
 
 ##### Table of Contents
 * [Why](#why)
 * [Usage](#usage)
 * [How it works](#how-it-works)
-* [Building the app](#building-the-app)
-* [Privacy considerations](#privacy-considerations)
 * [Credits](#credits)
 
 ## Why

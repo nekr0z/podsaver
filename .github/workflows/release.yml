@@ -19,7 +19,7 @@ jobs:
 
       - name: install nekr0z/changelog
         run: |
-          go install github.com/nekr0z/changelog/cmd/changelog@latest
+          go install evgenykuznetsov.org/go/changelog/cmd/changelog@latest
 
       - uses: ruby/setup-ruby@v1
         with:
@@ -45,7 +45,7 @@ jobs:
               --deb-changelog debian.changelog \
               --license GPL-3 \
               --deb-priority optional \
-              --url https://github.com/nekr0z/podsaver \
+              --url https://evgenykuznetsov.org/go/podsaver \
               --category net \
               --vendor "Evgeny Kuznetsov <evgeny@kuznetsov.md>" \
               --description "An app to download episodes of your favourite podcast to your local archive." \

@@ -1,4 +1,4 @@
-module github.com/nekr0z/podsaver
+module evgenykuznetsov.org/go/podsaver
 
 require (
 	github.com/gorilla/feeds v1.1.1
