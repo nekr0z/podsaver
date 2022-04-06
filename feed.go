@@ -134,7 +134,13 @@ func (pod *podcast) downloadEpisode(n int, url string) error {
 
 func downloadFile(fs afero.Fs, filenamePrefix, url string) (string, error) {
 	fmt.Fprintf(output, "downloading %s...", url)
-	resp, err := http.Get(url)
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return false, err
+	}
+	req.Header.Add("User-Agent", `Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.27 Safari/537.36`)
+	resp, err := client.Do(req)
 	if err != nil {
 		return "", err
 	}

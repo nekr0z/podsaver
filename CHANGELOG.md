@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Pre-release]
 
+## [0.1.3] - 2022-04-06
+### Changed
+- spoof user agent while downloading an episode
+
 ## [0.1.2] - 2022-04-06
 ### Changed
 - updated dependencies
@@ -19,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 *initial release*
 
 [Pre-release]: https://github.com/nekr0z/podsaver/releases/tag/latest
+[0.1.3]: https://github.com/nekr0z/podsaver/releases/tag/v0.1.3
 [0.1.2]: https://github.com/nekr0z/podsaver/releases/tag/v0.1.2
 [0.1.1]: https://github.com/nekr0z/podsaver/releases/tag/v0.1.1
 [0.1.0]: https://github.com/nekr0z/podsaver/releases/tag/v0.1.0
