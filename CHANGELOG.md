@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Pre-release]
+
+## [0.1.2] - 2022-04-06
 ### Changed
 - updated dependencies
 - spoof user agent
@@ -17,5 +19,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 *initial release*
 
 [Pre-release]: https://github.com/nekr0z/podsaver/releases/tag/latest
+[0.1.2]: https://github.com/nekr0z/podsaver/releases/tag/v0.1.2
 [0.1.1]: https://github.com/nekr0z/podsaver/releases/tag/v0.1.1
 [0.1.0]: https://github.com/nekr0z/podsaver/releases/tag/v0.1.0
